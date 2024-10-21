@@ -4,12 +4,12 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDvRlUQ-vdMPrH-i9MYRnLvp4RRRP0BsGQ",
-    authDomain: "graffitimap-2a080.firebaseapp.com",
-    projectId: "graffitimap-2a080",
-    storageBucket: "graffitimap-2a080.appspot.com",
-    messagingSenderId: "304255808903",
-    appId: "1:304255808903:web:0ea2262dc778d707ad0f22"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
   
 const app = initializeApp(firebaseConfig);

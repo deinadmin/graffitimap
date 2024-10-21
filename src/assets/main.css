@@ -1,0 +1,11 @@
+body {
+  font-family: 'Lato', sans-serif;
+}
+
+* {
+  user-select: none;
+}
+
+.n-upload-file-list {
+  margin-bottom: 10px!important;
+}

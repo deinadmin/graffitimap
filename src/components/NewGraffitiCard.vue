@@ -1,28 +1,49 @@
 <template>
-  <n-card title="OpenGraffitiMap" style="position: absolute; bottom: 10px; left: 10px; z-index: 1000; width: 350px;">
-          <template #header-extra>
-            <n-tag type="info" size="small" round>
-              BETA
-            </n-tag>
-          </template>
-          <div style="margin-top: -15px;">
-            <span style="font-size: 12px; color: #888;">Koordinaten</span>
-            <n-input-group style="margin-bottom: 10px;">
-              <n-input :disabled="!user" clearable v-model:value="newGraffiti.lat" type="text" placeholder="Breitengrad" />
-              <n-input :disabled="!user" clearable v-model:value="newGraffiti.lng" type="text" placeholder="Längengrad" />
-            </n-input-group>
-            <br>
-            <span style="font-size: 12px; color: #888;">Beschreibung</span>
-            <n-input :disabled="!user" style="margin-bottom: 10px;" clearable v-model:value="newGraffiti.title" type="textarea" autosize rows="3" placeholder="Beschreibung" />
-            <span style="font-size: 12px; color: #888;">Bild</span>
-            <n-upload v-model:file-list="fileList" @remove="newGraffiti.imageURL = null" :disabled="!user" :multiple="false" :max="1" :custom-request="uploadImage" >
-              <n-button :loading="uploading" block>Bild hochladen</n-button>
-            </n-upload>
-          </div>
-          <n-button v-if="!user" @click="loginWithGoogle" type="error" block>Anmelden, um ein Graffiti zu posten</n-button>
-          <n-button :loading="submitting" :disabled="uploading" v-else @click="handleGraffitiSubmit" type="primary" block>Neues Graffiti posten</n-button>
-        </n-card>
+  <n-card title="OpenGraffitiMap" id="new-graffiti-card">
+    <template #header-extra>
+      <n-tag type="info" size="small" round>
+        BETA
+      </n-tag>
+    </template>
+    <div style="margin-top: -15px;">
+      <span style="font-size: 12px; color: #888;">Koordinaten</span>
+      <n-input-group style="margin-bottom: 10px;">
+        <n-input :disabled="!user" clearable v-model:value="newGraffiti.lat" type="text" placeholder="Breitengrad" />
+        <n-input :disabled="!user" clearable v-model:value="newGraffiti.lng" type="text" placeholder="Längengrad" />
+      </n-input-group>
+      <br>
+      <span style="font-size: 12px; color: #888;">Beschreibung</span>
+      <n-input :disabled="!user" style="margin-bottom: 10px;" clearable v-model:value="newGraffiti.title" type="textarea" autosize rows="3" placeholder="Beschreibung" />
+      <span style="font-size: 12px; color: #888;">Bild</span>
+      <n-upload v-model:file-list="fileList" @remove="newGraffiti.imageURL = null" :disabled="!user" :multiple="false" :max="1" :custom-request="uploadImage" >
+        <n-button :loading="uploading" block>Bild hochladen</n-button>
+      </n-upload>
+    </div>
+    <n-button v-if="!user" @click="loginWithGoogle" type="error" block>Anmelden, um ein Graffiti zu posten</n-button>
+    <n-button :loading="submitting" :disabled="uploading" v-else @click="handleGraffitiSubmit" type="primary" block>Neues Graffiti posten</n-button>
+  </n-card>
 </template>
+
+<style scoped>
+#new-graffiti-card {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  z-index: 1000;
+  width: 350px;
+}
+
+@media (max-width: 600px) {
+  #new-graffiti-card {
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+  }
+}
+</style>
 
 <script setup>
 import { ref } from 'vue'

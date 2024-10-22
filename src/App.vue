@@ -164,6 +164,8 @@ const selectGraffiti = (graffiti) => {
         <div id="app" v-if="loaded">
           <LMap :style="{ background: isDarkMode ? '#000' : '#fff' }" :use-global-leaflet="false" style="height: 100vh; width: 100%;" :zoom="13" :center="[54.3233, 10.1228]" @click="handleMapClick">
             <LTileLayer :url="tileUrl"></LTileLayer>
+            
+            
             <LMarker v-for="graffiti in graffitis" :key="graffiti.id" :lat-lng="[graffiti.lat, graffiti.lng]" :icon="customIcon" @click="selectGraffiti(graffiti)">
             </LMarker>
           </LMap>

@@ -10,10 +10,12 @@ import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 import axios from 'axios'
 import NewGraffitiCard from './components/NewGraffitiCard.vue'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, addDoc, deleteDoc } from 'firebase/firestore'
 import { Icon } from 'leaflet'
 import sprayBottleIcon from './assets/spraybottle.png'  // Importiere das Icon
 import { NCard, NImage, NText } from 'naive-ui'
+import ShowGraffitiModal from './components/ShowGraffitiModal.vue'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
 
 const loaded = ref(false)
 
@@ -38,9 +40,38 @@ const logout = () => {
 const loginWithGoogle = () => {
   const provider = new GoogleAuthProvider()
   signInWithPopup(auth, provider)
+    .then((result) => {
+      // Der Benutzer hat sich erfolgreich angemeldet
+      const user = result.user;
+      // Überprüfe, ob der Benutzer bereits in der Datenbank existiert
+      const userRef = doc(db, 'users', user.uid);
+      getDoc(userRef).then((docSnap) => {
+        if (!docSnap.exists()) {
+          // Wenn der Benutzer nicht existiert, erstelle einen neuen Eintrag
+          setDoc(userRef, {
+            email: user.email,
+            role: 'user'
+          }).then(() => {
+            console.log('Neuer Benutzer in der Datenbank erstellt');
+          }).catch((error) => {
+            console.error('Fehler beim Erstellen des Benutzers:', error);
+          });
+        }
+      });
+    })
+    .catch((error) => {
+      console.error('Fehler bei der Anmeldung:', error);
+    });
+}
+
+const getUserRole = async () => {
+  const userRef = doc(db, 'users', user.value.uid);
+  const docSnap = await getDoc(userRef);
+  userRole.value = docSnap.data().role;
 }
 
 const user = ref(null)
+const userRole = ref('user')
 
 const graffitis = ref([])
 
@@ -51,7 +82,24 @@ const loadGraffitis = async () => {
     id: doc.id,
     ...doc.data()
   }))
+
+  // Überprüfe die URL-Parameter auf ?open={id}
+  const urlParams = new URLSearchParams(window.location.search);
+  const openGraffitiId = urlParams.get('open');
+  
+  if (openGraffitiId) {
+    const graffitiToOpen = graffitis.value.find(graffiti => graffiti.id === openGraffitiId);
+    if (graffitiToOpen) {
+      selectedGraffiti.value = graffitiToOpen;
+      showGraffitiCard.value = true;
+    } else {
+      console.error('Das Graffiti wurde nicht gefunden.');
+    }
+  }
+
+
 }
+
 
 onMounted(async () => {
   onAuthStateChanged(auth, (u) => {
@@ -59,12 +107,12 @@ onMounted(async () => {
       console.log(user)
       user.value = u
       loaded.value = true
-
+      getUserRole();
     } else {
       console.log('No user logged in')
       user.value = null
       loaded.value = true
-
+      userRole.value = 'user'
     }
   })
   await loadGraffitis()
@@ -121,41 +169,19 @@ const selectGraffiti = (graffiti) => {
           </LMap>
           <NewGraffitiCard :user="user" :newGraffiti="newGraffiti" :loginWithGoogle="loginWithGoogle" @graffiti-added="loadGraffitis" />
           
-          <!-- Benutzerdefinierte Karte für ausgewähltes Graffiti -->
-          <n-modal v-model:show="showGraffitiCard" closable>
-            <n-card
-              title="Informationen"
-              :bordered="false"
-              size="huge"
-              role="dialog"
-              aria-modal="true"
-              style="width: 600px;"
-            >
-            <div style="display: flex; flex-direction: row; align-items: center; justify-content: left;">
-
-              <n-tooltip trigger="hover" placement="bottom">
-                <template #trigger>
-                  <n-image  :src="selectedGraffiti.imageURL" alt="Graffiti" width="200px" style="margin-right: 20px;" />
-                </template>
-                Klicke um das Bild zu vergrößern.
-              </n-tooltip>
-              <div>
-                <h3 style="margin-bottom: 0;">Koordinaten:</h3>
-                <n-text code>Lat: {{ selectedGraffiti.lat }}, Lng: {{ selectedGraffiti.lng }}</n-text>
-                <h3 style="margin-bottom: 0;">Beschreibung:</h3>
-                <n-text>
-                  {{ selectedGraffiti.title }}
-                </n-text>
-              </div>
-            </div>
-              
-            </n-card>
-          </n-modal>
+          <ShowGraffitiModal 
+            :showGraffitiCard="showGraffitiCard" 
+            @update:showGraffitiCard="showGraffitiCard = $event"
+            :selectedGraffiti="selectedGraffiti" 
+            :user="user" 
+            :userRole="userRole"
+            @graffitiDeleted="loadGraffitis"
+          />
 
           <div v-if="user">
             <n-popover width="250px" trigger="click">
               <template #trigger>
-                <n-avatar round size="large" style="position: absolute; top: 10px; right: 12px; z-index: 1000;" :src="user.photoURL" />
+                <n-avatar round size="large" style="cursor: pointer; position: absolute; top: 10px; right: 12px; z-index: 1000;" :src="user.photoURL" />
               </template>
               <template #header>
                 <n-text strong>
@@ -163,6 +189,8 @@ const selectGraffiti = (graffiti) => {
                 </n-text>
               </template>
               {{ user.email }}
+              <br>
+              Rolle: {{ userRole === 'admin' ? 'Admin' : 'Benutzer' }}
               <template #footer>
                 <n-button @click="logout" block type="error" size="small">Logout</n-button>
               </template>

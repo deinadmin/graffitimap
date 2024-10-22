@@ -16,12 +16,15 @@ import sprayBottleIcon from './assets/spraybottle.png'  // Importiere das Icon
 import { NCard, NImage, NText } from 'naive-ui'
 import ShowGraffitiModal from './components/ShowGraffitiModal.vue'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
-
+import { Person20Filled } from '@vicons/fluent'
+import { NButton } from 'naive-ui'
+import { h } from 'vue'
 const loaded = ref(false)
-
+const showAdminPanel = ref(false)
 const clickedCoords = ref(null)
 
 const handleMapClick = (event) => {
+  if (user.value === null) return
   const { lat, lng } = event.latlng
   newGraffiti.value.lat = lat.toFixed(9)
   newGraffiti.value.lng = lng.toFixed(9)
@@ -154,6 +157,55 @@ const selectGraffiti = (graffiti) => {
   showGraffitiCard.value = true
 }
 
+const reports = ref([])
+const reportColumns = ref([
+  { title: 'ID', key: 'id', width: 150 },
+  { title: 'Grund', key: 'reason', width: 300 },
+  { 
+    title: 'Datum', 
+    key: 'createdAt',
+    width: 150,
+    render(row) {
+      // Formatiere das Datum in deutsches Format
+      const date = new Date(row.createdAt.toDate());
+      return date.toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+  },
+  {
+      title: "Aktionen",
+      key: "actions",
+      render(row) {
+        return h(
+          NButton,
+          {
+            strong: true,
+            tertiary: true,
+            size: "small",
+            onClick: () => selectGraffiti(graffitis.value.find(graffiti => graffiti.id === row.graffitiId))
+          },
+          { default: () => "Graffiti öffnen" }
+        );
+      }
+    }
+])
+
+const openAdminPanel = async () => {
+  const reportsCollection = collection(db, 'reports')
+  const reportsSnapshot = await getDocs(reportsCollection)
+  reports.value = reportsSnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }))
+
+  showAdminPanel.value = true
+}
+
 
 </script>
 
@@ -180,28 +232,43 @@ const selectGraffiti = (graffiti) => {
             @graffitiDeleted="loadGraffitis"
           />
 
-          <div v-if="user">
-            <n-popover width="250px" trigger="click">
-              <template #trigger>
-                <n-avatar round size="large" style="cursor: pointer; position: absolute; top: 10px; right: 12px; z-index: 1000;" :src="user.photoURL" />
-              </template>
-              <template #header>
-                <n-text strong>
-                  <b>Benutzerinfos</b>
-                </n-text>
-              </template>
-              {{ user.email }}
-              <br>
-              Rolle: {{ userRole === 'admin' ? 'Admin' : 'Benutzer' }}
-              <template #footer>
-                <n-button @click="logout" block type="error" size="small">Logout</n-button>
-              </template>
-            </n-popover>
-          </div>
+          <n-popover v-if="user" width="250px" trigger="click">
+            <template #trigger>
+              <n-avatar round size="large" style="cursor: pointer; position: absolute; top: 10px; right: 12px; z-index: 1000;" :src="user.photoURL" />
+            </template>
+            <template #header>
+              <n-text strong>
+                <b>Benutzerinfos</b>
+              </n-text>
+            </template>
+            {{ user.email }}
+            <br>
+            Rolle: {{ userRole === 'admin' ? 'Admin' : 'Benutzer' }}
+            <template #footer>
+              <n-button style="margin-bottom: 10px;" v-if="userRole === 'admin'" @click="openAdminPanel" block type="secondary" size="small">Admin Panel</n-button>
+              <n-button @click="logout" block type="error" size="small">Logout</n-button>
+            </template>
+          </n-popover>
+          <n-tooltip v-else>
+            <template #trigger>
+              <n-avatar @click="loginWithGoogle" round size="large" style="cursor: pointer; position: absolute; top: 10px; right: 12px; z-index: 1000;">
+                <n-icon>
+                  <Person20Filled />
+                </n-icon>
+              </n-avatar>
+            </template>
+            Login
+          </n-tooltip>
         </div>
         <div v-else :style="'height: 100vh; width: 100vw; display: flex; justify-content: center; align-items: center; background: ' + (isDarkMode ? '#000' : '#fff') + ';'">
           <n-spin size="large" :show="true" />
         </div>
+        <n-modal v-model:show="showAdminPanel">
+          <n-card style="width: 800px;" title="Admin Panel">
+            <h3>Gemeldete Graffiti</h3>
+            <n-data-table :columns="reportColumns" :data="reports" />
+          </n-card>
+        </n-modal>
       </n-message-provider>
     </n-config-provider>
   </n-modal-provider>

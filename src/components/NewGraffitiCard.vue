@@ -11,7 +11,7 @@
         <n-input :disabled="!user" clearable v-model:value="newGraffiti.lat" type="text" placeholder="Breitengrad" />
         <n-input :disabled="!user" clearable v-model:value="newGraffiti.lng" type="text" placeholder="Längengrad" />
       </n-input-group>
-      <n-alert :bordered="false" size="small" type="info">
+      <n-alert v-if="user !== null" :bordered="false" size="small" type="info">
         <span style="font-size: 12px;">Tippe auf die Karte, um die Koordinaten zu setzen.</span>
       </n-alert>
       <span style="font-size: 12px; color: #888;">Beschreibung</span>

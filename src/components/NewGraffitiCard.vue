@@ -11,7 +11,9 @@
         <n-input :disabled="!user" clearable v-model:value="newGraffiti.lat" type="text" placeholder="Breitengrad" />
         <n-input :disabled="!user" clearable v-model:value="newGraffiti.lng" type="text" placeholder="Längengrad" />
       </n-input-group>
-      <br>
+      <n-alert :bordered="false" size="small" type="info">
+        <span style="font-size: 12px;">Tippe auf die Karte, um die Koordinaten zu setzen.</span>
+      </n-alert>
       <span style="font-size: 12px; color: #888;">Beschreibung</span>
       <n-input :disabled="!user" style="margin-bottom: 10px;" clearable v-model:value="newGraffiti.title" type="textarea" autosize rows="3" placeholder="Beschreibung" />
       <span style="font-size: 12px; color: #888;">Bild</span>
@@ -30,7 +32,7 @@
   bottom: 10px;
   left: 10px;
   z-index: 1000;
-  width: 350px;
+  width: 380px;
 }
 
 @media (max-width: 600px) {
@@ -41,6 +43,9 @@
     border-radius: 0;
     margin: 0;
     padding: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
   }
 }
 </style>

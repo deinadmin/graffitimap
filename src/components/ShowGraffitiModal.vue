@@ -10,7 +10,7 @@
             aria-modal="true"
             style="width: 600px;"
         >
-        <div style="display: flex; flex-direction: row; align-items: center; justify-content: left;">
+        <div id="graffiti-card-content">
 
             <n-tooltip trigger="hover" placement="bottom">
             <template #trigger>
@@ -95,3 +95,16 @@ const reportGraffiti = async (id) => {
   message.success('Graffiti erfolgreich gemeldet.');
 }
 </script>
+
+<style scoped>
+
+@media (min-width: 600px) {
+  #graffiti-card-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: left;
+  }
+}
+
+</style>

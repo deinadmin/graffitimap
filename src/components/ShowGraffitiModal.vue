@@ -30,7 +30,7 @@
         <template #footer>
             <n-button style="margin-right: 10px;"@click="shareGraffiti(selectedGraffiti.id)" type="info" size="small">Graffiti teilen</n-button>
             <n-button v-if="userRole === 'admin'" @click="deleteGraffiti(selectedGraffiti.id)" type="error" size="small">Graffiti löschen</n-button>
-            <n-button @click="reportGraffitiModal = true" v-else-if="user !== null" type="error" size="small">Graffiti melden</n-button>
+            <n-button @click="reportGraffitiModal = true" v-else type="error" size="small">Graffiti melden</n-button>
         </template>
         </n-card>
     </n-modal>
@@ -57,7 +57,7 @@
 <script setup>
 import { db } from '../firebase';
 import { deleteDoc, doc, collection, addDoc } from 'firebase/firestore';
-import { useMessage } from 'naive-ui';
+import { pProps, useMessage } from 'naive-ui';
 import { ref } from 'vue';
 import { Copy16Regular } from '@vicons/fluent';
 
@@ -67,6 +67,7 @@ const props = defineProps({
   selectedGraffiti: Object,
   user: Object,
   userRole: String,
+  signInWithGoogle: Function,
 })
 
 const shareGraffitiModal = ref(false)
@@ -105,6 +106,15 @@ const copyToClipboard = () => {
 
 
 const reportGraffiti = async (id) => {
+  if (!props.user) {
+    message.error('Bitte melde dich an, um ein Graffiti zu melden.');
+    setTimeout(() => {
+      message.loading('Du wirst angemeldet...', { duration: 5000 });
+      props.signInWithGoogle();
+    }, 1000);
+    return;
+  }
+
   if (!reportReason.value) {
     message.error('Bitte wähle einen Grund, warum du das Graffiti melden möchtest.');
     return;

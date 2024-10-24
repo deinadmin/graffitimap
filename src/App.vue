@@ -230,6 +230,7 @@ const openAdminPanel = async () => {
             :user="user" 
             :userRole="userRole"
             @graffitiDeleted="loadGraffitis"
+            :signInWithGoogle="loginWithGoogle"
           />
 
           <n-popover v-if="user" width="250px" trigger="click">

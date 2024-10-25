@@ -27,7 +27,8 @@
       </n-input-group>
       <n-button 
         block 
-        :loading="settingCoordinates" 
+        :loading="settingCoordinates"
+        :disabled="!user"
         :dashed="settingCoordinates" 
         type="info" 
         @click="toggleSettingCoordinates"

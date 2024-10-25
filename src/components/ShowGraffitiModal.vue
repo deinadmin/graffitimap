@@ -29,7 +29,12 @@
         </div>
         <template #footer>
             <n-button style="margin-right: 10px;"@click="shareGraffiti(selectedGraffiti.id)" type="info" size="small">Graffiti teilen</n-button>
-            <n-button v-if="userRole === 'admin'" @click="deleteGraffiti(selectedGraffiti.id)" type="error" size="small">Graffiti löschen</n-button>
+            <n-popconfirm :show-icon="false" placement="bottom" v-if="userRole === 'admin'" @positive-click="deleteGraffiti(selectedGraffiti.id)" positive-text="Graffiti löschen" negative-text="Abbrechen">
+              <template #trigger>
+                <n-button type="error" size="small">Graffiti löschen</n-button>
+              </template>
+              Bist du dir sicher, dass du das Graffiti löschen möchtest?
+            </n-popconfirm>
             <n-button @click="reportGraffitiModal = true" v-else type="error" size="small">Graffiti melden</n-button>
         </template>
         </n-card>

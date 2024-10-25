@@ -8,12 +8,32 @@
     <div style="margin-top: -15px;">
       <span style="font-size: 12px; color: #888;">Koordinaten</span>
       <n-input-group style="margin-bottom: 10px;">
-        <n-input :disabled="!user" clearable v-model:value="newGraffiti.lat" type="text" placeholder="Breitengrad" />
-        <n-input :disabled="!user" clearable v-model:value="newGraffiti.lng" type="text" placeholder="Längengrad" />
+        <n-input 
+          :disabled="!user" 
+          clearable 
+          v-model:value="newGraffiti.lat" 
+          type="text" 
+          placeholder="Breitengrad" 
+          @update:value="emitCoordinatesChanged"
+        />
+        <n-input 
+          :disabled="!user" 
+          clearable 
+          v-model:value="newGraffiti.lng" 
+          type="text" 
+          placeholder="Längengrad" 
+          @update:value="emitCoordinatesChanged"
+        />
       </n-input-group>
-      <n-alert v-if="user !== null" :bordered="false" size="small" type="info">
-        <span style="font-size: 12px;">Tippe auf die Karte, um die Koordinaten zu setzen.</span>
-      </n-alert>
+      <n-button 
+        block 
+        :loading="settingCoordinates" 
+        :dashed="settingCoordinates" 
+        type="info" 
+        @click="toggleSettingCoordinates"
+      >
+        {{ settingCoordinates ? 'Klicke auf die Map' : 'Koordinaten auswählen' }}
+      </n-button>
       <span style="font-size: 12px; color: #888;">Beschreibung</span>
       <n-input :disabled="!user" style="margin-bottom: 10px;" clearable v-model:value="newGraffiti.title" type="textarea" autosize rows="3" placeholder="Beschreibung" />
       <span style="font-size: 12px; color: #888;">Bild</span>
@@ -71,14 +91,22 @@ const props = defineProps({
   loginWithGoogle: {
     type: Function,
     required: true
+  },
+  settingCoordinates: {
+    type: Boolean,
+    required: true
   }
 })
 
 import { db } from '@/firebase'
 import { collection, addDoc } from 'firebase/firestore'
+import { Settings16Filled } from '@vicons/fluent';
+
+
+
 
 const submitting = ref(false)
-const emit = defineEmits(['graffiti-added'])
+const emit = defineEmits(['graffiti-added', 'update:settingCoordinates', 'coordinates-changed'])
 
 const handleGraffitiSubmit = async () => {
     if (!props.newGraffiti.lat || !props.newGraffiti.lng || !props.newGraffiti.title || !props.newGraffiti.imageURL) {
@@ -97,12 +125,8 @@ const handleGraffitiSubmit = async () => {
     })
     submitting.value = false
     message.success('Graffiti erfolgreich gepostet.')
-    props.newGraffiti.lat = ""
-    props.newGraffiti.lng = ""
-    props.newGraffiti.title = ""
-    props.newGraffiti.imageURL = null
-    fileList.value = []
     emit('graffiti-added')
+    fileList.value = []
 }
 
 const uploading = ref(false)
@@ -144,6 +168,14 @@ const uploadImage = (options) => {
       reject(error);
     });
   });
+}
+
+const toggleSettingCoordinates = () => {
+  emit('update:settingCoordinates', !props.settingCoordinates)
+}
+
+const emitCoordinatesChanged = () => {
+  emit('coordinates-changed')
 }
 
 </script>

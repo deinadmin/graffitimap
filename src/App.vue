@@ -4,7 +4,7 @@ import HelloWorld from './components/HelloWorld.vue'
 import { ref, computed, onMounted } from 'vue'
 import { darkTheme, lightTheme } from 'naive-ui'
 import "leaflet/dist/leaflet.css";
-import { LMap, LTileLayer, LMarker, LPopup } from "@vue-leaflet/vue-leaflet";
+import { LMap, LTileLayer, LMarker, LPopup, LIcon } from "@vue-leaflet/vue-leaflet";
 import { auth, db } from './firebase'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
@@ -23,11 +23,26 @@ const loaded = ref(false)
 const showAdminPanel = ref(false)
 const clickedCoords = ref(null)
 
+const updateTempMarker = () => {
+  if (newGraffiti.value.lat && newGraffiti.value.lng) {
+    tempMarker.value = {
+      lat: parseFloat(newGraffiti.value.lat),
+      lng: parseFloat(newGraffiti.value.lng)
+    };
+  } else {
+    tempMarker.value = null;
+  }
+}
+
 const handleMapClick = (event) => {
   if (user.value === null) return
-  const { lat, lng } = event.latlng
-  newGraffiti.value.lat = lat.toFixed(9)
-  newGraffiti.value.lng = lng.toFixed(9)
+  if (settingCoordinates.value) {
+    const { lat, lng } = event.latlng
+    newGraffiti.value.lat = lat.toFixed(9)
+    newGraffiti.value.lng = lng.toFixed(9)
+    updateTempMarker();
+    settingCoordinates.value = false
+  }
 }
 const newGraffiti = ref({
   lat: '',
@@ -75,6 +90,7 @@ const getUserRole = async () => {
 
 const user = ref(null)
 const userRole = ref('user')
+const settingCoordinates = ref(false)
 
 const graffitis = ref([])
 
@@ -207,6 +223,18 @@ const openAdminPanel = async () => {
 }
 
 
+const tempMarker = ref(null);
+
+const resetNewGraffiti = () => {
+  newGraffiti.value = {
+    lat: '',
+    lng: '',
+    title: '',
+    imageURL: null
+  }
+  tempMarker.value = null
+}
+
 </script>
 
 <template>
@@ -214,14 +242,32 @@ const openAdminPanel = async () => {
     <n-config-provider :theme="currentTheme">
       <n-message-provider>
         <div id="app" v-if="loaded">
-          <LMap :style="{ background: isDarkMode ? '#000' : '#fff' }" :use-global-leaflet="false" style="height: 100vh; width: 100%;" :zoom="13" :center="[54.3233, 10.1228]" @click="handleMapClick">
+          <LMap 
+            :style="{ background: isDarkMode ? '#000' : '#fff', cursor: settingCoordinates ? 'crosshair!important' : 'grab' }" 
+            :use-global-leaflet="false" 
+            style="height: 100vh; width: 100vw;" 
+            :zoom="13" 
+            :center="[54.3233, 10.1228]" 
+            @click="handleMapClick"
+          >
             <LTileLayer :url="tileUrl"></LTileLayer>
-            
             
             <LMarker v-for="graffiti in graffitis" :key="graffiti.id" :lat-lng="[graffiti.lat, graffiti.lng]" :icon="customIcon" @click="selectGraffiti(graffiti)">
             </LMarker>
+            
+            <LMarker v-if="tempMarker" :lat-lng="[tempMarker.lat, tempMarker.lng]">
+              <LIcon :icon-url="'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png'" :icon-size="[25, 41]" :icon-anchor="[12, 41]" />
+            </LMarker>
           </LMap>
-          <NewGraffitiCard :user="user" :newGraffiti="newGraffiti" :loginWithGoogle="loginWithGoogle" @graffiti-added="loadGraffitis" />
+          <NewGraffitiCard 
+            :user="user" 
+            :newGraffiti="newGraffiti" 
+            :settingCoordinates="settingCoordinates" 
+            :loginWithGoogle="loginWithGoogle" 
+            @graffiti-added="loadGraffitis(); resetNewGraffiti()"
+            @update:settingCoordinates="settingCoordinates = $event"
+            @coordinates-changed="updateTempMarker"
+          />
           
           <ShowGraffitiModal 
             :showGraffitiCard="showGraffitiCard" 
@@ -316,5 +362,11 @@ body, html {
     right: 10px;
     max-width: none;
   }
+}
+.setting-coordinates {
+  cursor: crosshair!important;
+}
+.leaflet-container {
+  cursor: inherit !important;
 }
 </style>
